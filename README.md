@@ -8,7 +8,7 @@ Imagine a decentralized filesharing system, where all data is stored locally at 
 
 On Alice's end:
 
-	var rymd = new RymdNode('alice', {
+	var rymd = new RymdNode({
 		crypto: Rymd.Crypto.WebCrypto,
 		keyStore: new Rymd.Data.IndexedDBStore,
 		dataStore: new Rymd.Data.IndexedDBStore,
@@ -33,11 +33,12 @@ On Alice's end:
 				console.log(result);
 			});
 	});
+    rymd.init('alice');
 
 
 On Bob's end:
 
-	var rymd = new RymdNode('bob', [options]);
+	var rymd = new RymdNode([options]);
 
 	rymd.on('connection').then(Rymd.verify).then(function(conn) {
 		// 'conn' is a RymdConnection
@@ -65,6 +66,7 @@ On Bob's end:
 		
 		conn.listen();
 	});
+    rymd.init('bob');
 	
 
 	// .. or wait for later

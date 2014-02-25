@@ -6,7 +6,8 @@
   "main": "lib/rymd.js",
   "dependencies": {
     "q": "1.0.x",
-    "connection-peerjs": "0.0.x"
+    "connection-peerjs": "0.0.x",
+    "dht-client": "0.0.x"
   },
   "scripts": {
     "test": "gulp test"
