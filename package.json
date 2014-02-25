@@ -1,0 +1,25 @@
+{
+  "name": "datx02-sample",
+  "description": "Sample module project for course DATX02",
+  "version": "0.0.1",
+  "license": "MIT",
+  "main": "lib/main.js",
+  "dependencies": {
+    "q": "1.0.x"
+  },
+  "scripts": {
+    "test": "gulp test"
+  },
+  "devDependencies": {
+    "browserify": "~3.0",
+    "gulp-util": "~2.2.14",
+    "gulp": "~3.5.1",
+    "gulp-browserify": "~0.4.2",
+    "gulp-watch": "~0.5.0",
+    "gulp-clean": "~0.2.4",
+    "gulp-concat": "~2.1.7",
+    "gulp-jshint": "~1.4.0",
+    "jshint-stylish": "~0.1.5",
+    "connect": "~2.13.0"
+  }
+}
