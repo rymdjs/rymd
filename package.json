@@ -3,7 +3,7 @@
   "description": "Sample module project for course DATX02",
   "version": "0.0.1",
   "license": "MIT",
-  "main": "lib/main.js",
+  "main": "lib/index.js",
   "dependencies": {
     "q": "1.0.x"
   },
