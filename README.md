@@ -15,6 +15,8 @@ On Alice's end:
 		network: new Rymd.Network.PeerJS.Peer,
 		verifier: new Rymd.Security.DHT
 	});
+
+	rymd.init('alice');
 	
 	// rymd.connect(String|RymdNode)
 	connection = rymd.connect('bob');
@@ -33,12 +35,14 @@ On Alice's end:
 				console.log(result);
 			});
 	});
-    rymd.init('alice');
+    
 
 
 On Bob's end:
 
 	var rymd = new RymdNode([options]);
+
+	rymd.init('bob');
 
 	rymd.on('connection').then(Rymd.verify).then(function(conn) {
 		// 'conn' is a RymdConnection
@@ -66,7 +70,6 @@ On Bob's end:
 		
 		conn.listen();
 	});
-    rymd.init('bob');
 	
 
 	// .. or wait for later
