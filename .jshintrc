@@ -2,5 +2,6 @@
 	"asi" : true,
 	"newcap" : true,
 	"eqeqeq": true,
-	"unused": "vars"
+	"unused": "vars",
+	"trailing": true
 }
