@@ -5,7 +5,8 @@
   "license": "MIT",
   "main": "lib/rymd.js",
   "dependencies": {
-    "q": "1.0.x"
+    "q": "1.0.x",
+    "rymd-utils": "git://github.com/rymdjs/rymd-utils.git#master"
   },
   "scripts": {
     "test": "gulp test"
