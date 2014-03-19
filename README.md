@@ -23,9 +23,7 @@ On Alice's end:
 	// rymd.connect(String|RymdNode)
 	rymd.connect('bob').then(function(connection) {
 		// connection is a Connection
-		connection.shareResource(guid).then(function(result) {
-			console.log(result.status);
-		});
+		connection.shareResource(metadata, key);
 
 		connection.on('request').then(function(request) {
 			// auth of request is done here
@@ -85,6 +83,24 @@ On Bob's end:
 	});
 
 ## API
+
+### Events on the `RymdNode` object
+
+	// Incoming share invite
+	rymd.on('share', function(peerName, data) {
+			// peerName: the identity who wants to share
+			// data: metadata
+	});
+
+	// Request to share a Resource
+	rymd.on('request', function(guid) {
+			// guid: the guid for the Resource
+	});
+
+	// Incoming Resource
+	rymd.on('resource', function(resource) {
+			// resource: the Resource
+	});
 
 ### Classes
 
