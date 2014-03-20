@@ -6,7 +6,8 @@
   "main": "lib/rymd.js",
   "dependencies": {
     "q": "1.0.x",
-    "rymd-utils": "git://github.com/rymdjs/rymd-utils.git#master"
+    "rymd-utils": "git://github.com/rymdjs/rymd-utils.git#master",
+    "rymd-logger": "git://github.com/rymdjs/rymd-logger.git#master"
   },
   "scripts": {
     "test": "gulp test"
