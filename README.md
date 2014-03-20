@@ -16,39 +16,42 @@ On Alice's end:
 		verifier: new Rymd.Security.DHT
 	});
 
-	rymd.init('alice');
-	
-	// rymd.connect(String|RymdNode)
-	connection = rymd.connect('bob');
+	rymd.init('alice').then(function() {
+		// initialized
+	});
 
-	connection.shareResource(guid).then(function(result) {
-		console.log(result.status);
+	// rymd.connect(String|RymdNode)
+	rymd.connect('bob').then(function(connection) {
+		// connection is a Connection
+		connection.shareResource(metadata, key);
+
+		connection.on('request').then(function(request) {
+			// auth of request is done here
+
+			// send file
+			rymd.getResource(request.guid)
+				.then(connection.sendResource)
+				.then(function(result) {
+					console.log(result);
+				});
+		});
 	});
-	
-	connection.on('request').then(function(request) {
-		// auth of request is done here
-		
-		// send file
-		rymd.getResource(request.guid)
-			.then(connection.sendResource)
-			.then(function(result) {
-				console.log(result);
-			});
-	});
-    
+
 
 
 On Bob's end:
 
 	var rymd = new RymdNode([options]);
 
-	rymd.init('bob');
+	rymd.init('bob').then(function() {
+		// initialized
+	});
 
 	rymd.on('connection').then(Rymd.verify).then(function(conn) {
 		// 'conn' is a RymdConnection
 		// Metadata is stored before this event is triggered
-		conn.on('metadata').then(function(metadata) {
-		/* 
+		conn.on('share', function(fromPeer, metadata) {
+		/*
 			metadata = {
 				guid: String,
 				timestamp: Date|Long,
@@ -57,7 +60,7 @@ On Bob's end:
 				size: Number,
 				checksum: String,
 				key: String
-			}; 
+			};
 		*/
 			// fetch resource instantly
 			rymd.connect(metadata.node).then(function(connection) {
@@ -67,10 +70,10 @@ On Bob's end:
 
 		// do stuff
 		conn.on('resource').then(rymd.saveResource);
-		
+
 		conn.listen();
 	});
-	
+
 
 	// .. or wait for later
 	rymd.connect('alice').then(function(connection){
@@ -81,18 +84,36 @@ On Bob's end:
 
 ## API
 
+### Events on the `RymdNode` object
+
+	// Incoming share invite
+	rymd.on('share', function(peerName, data) {
+			// peerName: the identity who wants to share
+			// data: metadata
+	});
+
+	// Request to share a Resource
+	rymd.on('request', function(guid) {
+			// guid: the guid for the Resource
+	});
+
+	// Incoming Resource
+	rymd.on('resource', function(resource) {
+			// resource: the Resource
+	});
+
 ### Classes
 
 - `RymdNode`
-- `RymdConnection`
-- (`RymdResource`)
+- `Connection`
+- `Resource`
 
 ## Build tasks
-	
+
 	# Default: builds bundle.js from lib/index.js
 	gulp
 	gulp build
-	
+
 	# Watches lib/index.js for changes and generates a build
 	gulp watch
 
@@ -101,7 +122,7 @@ On Bob's end:
 
 ## Develop
 
-	npm install 
+	npm install
 	gulp watch
 
 A concatenated `bundle.js` will be generated in the `build` directory.
