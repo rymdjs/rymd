@@ -74,6 +74,6 @@
   // Use events
   Utils.extend(Connection.prototype, Utils.Events);
 
-  module.exports = Connection;
+  this.Connection = Connection;
 
 }).call(this);

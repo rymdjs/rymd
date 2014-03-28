@@ -1,4 +1,4 @@
-function() {
+(function() {
 
   var Utils = RymdUtils,
       Logger = RymdLogger;
@@ -48,5 +48,6 @@ function() {
     };
   }();
 
-  window.Peer = Peer;
-}(window);
+  this.Peer = Peer;
+
+}).call(this);
