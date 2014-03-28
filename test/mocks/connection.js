@@ -1,6 +1,5 @@
 (function() {
 
-
   var Utils = RymdUtils,
       Logger = RymdLogger;
 
