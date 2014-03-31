@@ -45,34 +45,85 @@ describe("ConnectionHandler", function() {
     });
   });
 
-  it('should respond correctly to first auth challenge', function(done) {
-    sinon.stub(window.crypto, 'getRandomValues', function(arr) {
-      for(var i=0; i<arr.length; i++) {
-        arr[i] = firstResponse[i];
+  describe('Authentication', function() {
+    afterEach(function() {
+      if(typeof window.crypto.getRandomValues.restore === 'function') {
+        window.crypto.getRandomValues.restore();
       }
-      return arr;
     });
-    bob.network.on('authChallenge', bob.connectionHandler.onAuthChallenge.bind(bob.connectionHandler));
-    bob.network.on('authChallenge', function() {
-      console.log('xxx');
-    });
-
-    /*bob.network.on('data', function(data) {
-      crypto.decryptData(bob.privKey, data.data).then(function(result) {
-        var resultView = new Uint8Array(result);
-        if(resultView.length !== firstResponse.length) {
-          done(new Error('incorrect first response length'));
-        }
-        for(var i=0; i<firstResponse.length; i++) {
-          if (resultView[i] !== firstResponse[i]) {
-            done(new Error('incorrect first response data'));
+    //Fills array with given value
+    var stubRandom = function(val) {
+      return function(arr) {
+          for(var i=0; i<arr.length; i++) {
+            arr[i] = val;
           }
+          return arr;
         }
-        done();
+    };
+    describe('Initial auth challenge', function() {
+      it('should give correct challenge', function(done) {
+        sinon.stub(window.crypto, 'getRandomValues', stubRandom(0));
+        bob.network.on('authChallenge', function(peerName, data) {
+          if(peerName !== 'alice') {
+            done(new Error('incorrect peer name '+peerName));
+          }
+          return crypto.decryptData(bob.privKey, new Uint8Array(data.data)).then(function(result) {
+            var resultView = new Uint8Array(result);
+            if(resultView.length !== firstResponse.length) {
+              done(new Error('incorrect first response length'));
+            }
+            for(var i=0; i<firstResponse.length; i++) {
+              if (resultView[i] !== firstResponse[i]) {
+                done(new Error('incorrect first response data'));
+              }
+            }
+            done();
+          });
+        });
+
+        alice.connectionHandler.connect('bob').then(function() {
+        });
       });
     });
-    */
-    alice.connectionHandler.connect('bob').then(function() {
+
+    describe('First auth response', function() {
+      it('should reject incorrect identity', function(done) {
+      });
+      it('should reject incorrect nonce', function(done) {
+      });
+      it('should give correct response', function(done) {
+        sinon.stub(window.crypto, 'getRandomValues', function(arr) {
+          for(var i=0; i<arr.length; i++) {
+            arr[i] = firstResponse[i];
+          }
+          return arr;
+        });
+        bob.network.on('authChallenge', bob.connectionHandler.onAuthChallenge.bind(bob.connectionHandler));
+        alice.network.on('authResponseError', function(error) {
+          console.log('authResponseError', error);
+        });
+        alice.network.on('authResponse', function(peerName, data) {
+          if(peerName !== 'bob') {
+            done(new Error('incorrect peer name '+peerName));
+          }
+          return crypto.decryptData(alice.privKey, new Uint8Array(data.data)).then(function(result) {
+            var resultView = new Uint8Array(result);
+            console.log(resultView.length, firstResponse.length, resultView);
+            if(resultView.length !== firstResponse.length) {
+              done(new Error('incorrect first response length'));
+            }
+            for(var i=0; i<firstResponse.length; i++) {
+              if (resultView[i] !== firstResponse[i]) {
+                done(new Error('incorrect first response data'));
+              }
+            }
+            done();
+          });
+        });
+
+        alice.connectionHandler.connect('bob').then(function() {
+        });
+      });
     });
   });
 });

@@ -37,6 +37,7 @@
           peer = this._peers[endpoint.id],
           connection = new Connection(peer, this);
       this.bubble('request', connection);
+      this.bubble('authResponse', connection);
       peer.trigger('connection', this);
       logger.global('Connected to ' + identity);
       deferred.resolve(connection);
