@@ -21,11 +21,10 @@
       this.endpoint = identity + 'Endpoint';
       this._peers[this.endpoint] = this;
       this.on('connection', function(peer) {
-        var connection = new Connection(peer);
+        var connection = new Connection(peer, this);
         this.bubble('share', connection);
         this.bubble('request', connection);
         this.bubble('authChallenge', connection);
-        //this.trigger('connection', connection);
         logger.global("Incoming connection: " + connection.identity);
       }.bind(this));
       deferred.resolve(this.endpoint);
@@ -36,7 +35,7 @@
     var connect = function(identity, endpoint) {
       var deferred = Q.defer(),
           peer = this._peers[endpoint.id],
-          connection = new Connection(peer);
+          connection = new Connection(peer, this);
       this.bubble('request', connection);
       peer.trigger('connection', this);
       logger.global('Connected to ' + identity);

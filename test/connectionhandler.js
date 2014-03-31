@@ -52,7 +52,7 @@ describe("ConnectionHandler", function() {
       }
       return arr;
     });
-    //bob.network.on('authChallenge', bob.connectionHandler.onAuthChallenge.bind(bob.connectionHandler));
+    bob.network.on('authChallenge', bob.connectionHandler.onAuthChallenge.bind(bob.connectionHandler));
     bob.network.on('authChallenge', function() {
       console.log('xxx');
     });
