@@ -18,22 +18,23 @@
       var deferred = Q.defer();
 
       this.identity = identity;
-      this.endpoint = Utils.guid();
+      this.endpoint = identity + 'Endpoint';
       this._peers[this.endpoint] = this;
       this.on('connection', function(peer) {
         var connection = new Connection(peer);
         this.bubble('share', connection);
         this.bubble('request', connection);
-        this.trigger('connection', connection);
+        //this.trigger('connection', connection);
         logger.global("Incoming connection: " + connection.identity);
       }.bind(this));
       deferred.resolve(this.endpoint);
+      console.log(identity);
       return deferred.promise;
     }
 
     var connect = function(identity, endpoint) {
       var deferred = Q.defer(),
-          peer = this._peers[endpoint],
+          peer = this._peers[endpoint.id],
           connection = new Connection(peer);
       this.bubble('resource', connection);
       this.bubble('request', connection);
@@ -49,5 +50,7 @@
   }();
 
   this.Peer = Peer;
+
+  Utils.extend(Peer.prototype, Utils.Events);
 
 }).call(this);
