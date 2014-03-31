@@ -9,8 +9,8 @@ describe("ConnectionHandler", function() {
 
   var logger = new Logger('connectionhandlertest');
 
-  var firstResponse = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 97, 108, 105, 99, 101], //[0], alice
-      secondChallenge = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 97, 108, 105, 99, 101]; //[0], alice
+  var firstChallenge = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 97, 108, 105, 99, 101], //[0], alice
+      firstResponse = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 98, 111, 98]; //[0], [0], bob
   var alice = {},
       bob = {},
       crypto;
@@ -78,11 +78,11 @@ describe("ConnectionHandler", function() {
           }
           return crypto.decryptData(bob.privKey, new Uint8Array(data.data)).then(function(result) {
             var resultView = new Uint8Array(result);
-            if(resultView.length !== firstResponse.length) {
+            if(resultView.length !== firstChallenge.length) {
               done(new Error('incorrect first response length'));
             }
-            for(var i=0; i<firstResponse.length; i++) {
-              if (resultView[i] !== firstResponse[i]) {
+            for(var i=0; i<firstChallenge.length; i++) {
+              if (resultView[i] !== firstChallenge[i]) {
                 done(new Error('incorrect first response data'));
               }
             }
@@ -90,15 +90,13 @@ describe("ConnectionHandler", function() {
           });
         });
 
-        alice.connectionHandler.connect('bob').then(function() {
-        });
+        alice.connectionHandler.connect('bob');
       });
     });
 
     describe('First auth response', function() {
       it('should reject incorrect identity', function(done) {
-        console.log(alice.pubKey);
-        crypto.encryptData(alice.pubKey, new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 97, 108, 106])).then(function(encResponse) { //[0], [0], alj
+        crypto.encryptData(alice.pubKey, new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 97, 108, 106])).then(function(encResponse) { //[0], [0], alj
           sinon.stub(window.crypto, 'getRandomValues', stubRandom(0));
           bob.network.on('authChallenge', function(peerName, data, connection) {
             sinon.stub(connection, 'sendAuthResponse', function() {
@@ -108,20 +106,35 @@ describe("ConnectionHandler", function() {
           });
           bob.network.on('authChallenge', bob.connectionHandler.onAuthChallenge.bind(bob.connectionHandler));
           alice.network.on('authResponseError', function(error) {
-            console.log('herp');
             if(error.message === 'Authentication failed: Identities did not match!') {
               done();
             } else {
               done('Did not reject idetity properly. Error message: ' + error.message);
             }
           });
-          alice.connectionHandler.connect('bob').then(function() {
-          });
+          alice.connectionHandler.connect('bob');
         });
       });
       it('should reject incorrect nonce', function(done) {
+        crypto.encryptData(alice.pubKey, new Uint8Array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 98, 111, 98])).then(function(encResponse) { //[0], [0], bob
+          sinon.stub(window.crypto, 'getRandomValues', stubRandom(0));
+          bob.network.on('authChallenge', function(peerName, data, connection) {
+            sinon.stub(connection, 'sendAuthResponse', function() {
+              logger.global('Sending crypto response with incorrect nonce to ' + this.identity);
+              this.peer.trigger('data', {type: 'authResponse', data: encResponse});  //[0], aljce
+            })
+          });
+          bob.network.on('authChallenge', bob.connectionHandler.onAuthChallenge.bind(bob.connectionHandler));
+          alice.network.on('authResponseError', function(error) {
+            if(error.message === 'Authentication failed: Response nonce did not match!') {
+              done();
+            } else {
+              done('Did not reject idetity properly. Error message: ' + error.message);
+            }
+          });
+          alice.connectionHandler.connect('bob');
+        });
       });
-      /*
       it('should give correct response', function(done) {
         sinon.stub(window.crypto, 'getRandomValues', stubRandom(0));
         bob.network.on('authChallenge', bob.connectionHandler.onAuthChallenge.bind(bob.connectionHandler));
@@ -149,7 +162,6 @@ describe("ConnectionHandler", function() {
         alice.connectionHandler.connect('bob').then(function() {
         });
       });
-      */
     });
   });
 });

@@ -28,7 +28,6 @@
         logger.global("Incoming connection: " + connection.identity);
       }.bind(this));
       deferred.resolve(this.endpoint);
-      console.log(identity);
       return deferred.promise;
     }
 
