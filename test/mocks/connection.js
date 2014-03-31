@@ -17,6 +17,7 @@
 
   var ondata = function(data) {
     console.log('Incoming data', data);
+    debugger
     if ( !data.type ) return;
     var from = this.identity;
     this.trigger(data.type, from, data, this);

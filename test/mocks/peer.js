@@ -24,6 +24,7 @@
         var connection = new Connection(peer);
         this.bubble('share', connection);
         this.bubble('request', connection);
+        this.bubble('authChallenge', connection);
         //this.trigger('connection', connection);
         logger.global("Incoming connection: " + connection.identity);
       }.bind(this));
@@ -36,7 +37,6 @@
       var deferred = Q.defer(),
           peer = this._peers[endpoint.id],
           connection = new Connection(peer);
-      this.bubble('resource', connection);
       this.bubble('request', connection);
       peer.trigger('connection', this);
       logger.global('Connected to ' + identity);

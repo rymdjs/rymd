@@ -52,8 +52,12 @@ describe("ConnectionHandler", function() {
       }
       return arr;
     });
+    //bob.network.on('authChallenge', bob.connectionHandler.onAuthChallenge.bind(bob.connectionHandler));
+    bob.network.on('authChallenge', function() {
+      console.log('xxx');
+    });
 
-    bob.network.on('data', function(data) {
+    /*bob.network.on('data', function(data) {
       crypto.decryptData(bob.privKey, data.data).then(function(result) {
         var resultView = new Uint8Array(result);
         if(resultView.length !== firstResponse.length) {
@@ -67,6 +71,7 @@ describe("ConnectionHandler", function() {
         done();
       });
     });
+    */
     alice.connectionHandler.connect('bob').then(function() {
     });
   });
