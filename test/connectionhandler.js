@@ -10,7 +10,7 @@ describe("ConnectionHandler", function() {
   var logger = new Logger('connectionhandlertest');
 
   var firstChallenge = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 97, 108, 105, 99, 101], //[0], alice
-      firstResponse = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 98, 111, 98]; //[0], [0], bob
+      firstResponse = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 98, 111, 98]; //[0], [0], bob
   var alice = {},
       bob = {},
       crypto;
@@ -135,9 +135,13 @@ describe("ConnectionHandler", function() {
           alice.connectionHandler.connect('bob');
         });
       });
-      it('should give correct response', function(done) {
+      it('should be properly formatted', function(done) {
         sinon.stub(window.crypto, 'getRandomValues', stubRandom(0));
-        bob.network.on('authChallenge', bob.connectionHandler.onAuthChallenge.bind(bob.connectionHandler));
+        bob.network.on('authChallenge', function() {
+          window.crypto.getRandomValues.restore();
+          sinon.stub(window.crypto, 'getRandomValues', stubRandom(1));
+          bob.connectionHandler.onAuthChallenge.apply(bob.connectionHandler, arguments);
+        });
         alice.network.on('authResponseError', function(error) {
           console.log('authResponseError', error);
         });
@@ -162,6 +166,61 @@ describe("ConnectionHandler", function() {
         alice.connectionHandler.connect('bob').then(function() {
         });
       });
+    });
+    describe('Second  auth response', function() {
+      it('should reject incorrect nonce', function(done) {
+        crypto.encryptData(bob.pubKey, new Uint8Array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])).then(function(encResponse) { //[1]
+          sinon.stub(window.crypto, 'getRandomValues', stubRandom(0));
+          alice.network.on('authResponse', function(peerName, data, connection) {
+            sinon.stub(connection, 'sendAuthLastResponse', function() {
+              logger.global('Sending crypto last response with incorrect nonce to ' + this.identity);
+              this.peer.trigger('data', {type: 'authLastResponse', data: encResponse});  //[1]
+            })
+          });
+          bob.network.on('authChallenge', bob.connectionHandler.onAuthChallenge.bind(bob.connectionHandler));
+          bob.network.on('authLastResponseError', function(error) {
+            if(error.message === 'Authentication failed: Response nonce did not match!') {
+              done();
+            } else {
+              done('Did not reject nonce properly. Error message: ' + error.message);
+            }
+          });
+          alice.connectionHandler.connect('bob');
+        });
+      });
+      /*
+      it('should give correct response', function(done) {
+        sinon.stub(window.crypto, 'getRandomValues', stubRandom(0));
+        bob.network.on('authChallenge', function() {
+          window.crypto.getRandomValues.restore();
+          sinon.stub(window.crypto, 'getRandomValues', stubRandom(1));
+          bob.connectionHandler.onAuthChallenge.apply(bob.connectionHandler, arguments);
+        });
+        alice.network.on('authResponseError', function(error) {
+          console.log('authResponseError', error);
+        });
+        alice.network.on('authResponse', function(peerName, data) {
+          if(peerName !== 'bob') {
+            done(new Error('incorrect peer name '+peerName));
+          }
+          return crypto.decryptData(alice.privKey, new Uint8Array(data.data)).then(function(result) {
+            var resultView = new Uint8Array(result);
+            if(resultView.length !== firstResponse.length) {
+              done(new Error('incorrect first response length'));
+            }
+            for(var i=0; i<firstResponse.length; i++) {
+              if (resultView[i] !== firstResponse[i]) {
+                done(new Error('incorrect first response data'));
+              }
+            }
+            done();
+          });
+        });
+
+        alice.connectionHandler.connect('bob').then(function() {
+        });
+      });
+      */
     });
   });
 });

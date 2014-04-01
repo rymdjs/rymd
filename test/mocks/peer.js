@@ -25,6 +25,7 @@
         this.bubble('share', connection);
         this.bubble('request', connection);
         this.bubble('authChallenge', connection);
+        this.bubble('authLastResponse', connection);
         logger.global("Incoming connection: " + connection.identity);
       }.bind(this));
       deferred.resolve(this.endpoint);
