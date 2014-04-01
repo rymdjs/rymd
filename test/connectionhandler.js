@@ -10,7 +10,8 @@ describe("ConnectionHandler", function() {
   var logger = new Logger('connectionhandlertest');
 
   var firstChallenge = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 97, 108, 105, 99, 101], //[0], alice
-      firstResponse = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 98, 111, 98]; //[0], [0], bob
+      firstResponse = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 98, 111, 98], //[0], [0], bob
+      lastResponse = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]; //[1]
   var alice = {},
       bob = {},
       crypto;
@@ -170,7 +171,7 @@ describe("ConnectionHandler", function() {
     describe('Second  auth response', function() {
       it('should reject incorrect nonce', function(done) {
         crypto.encryptData(bob.pubKey, new Uint8Array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])).then(function(encResponse) { //[1]
-          sinon.stub(window.crypto, 'getRandomValues', stubRandom(0));
+          sinon.stub(window.crypto, 'getRandomValues', stubRandom(1));
           alice.network.on('authResponse', function(peerName, data, connection) {
             sinon.stub(connection, 'sendAuthLastResponse', function() {
               logger.global('Sending crypto last response with incorrect nonce to ' + this.identity);
@@ -188,29 +189,29 @@ describe("ConnectionHandler", function() {
           alice.connectionHandler.connect('bob');
         });
       });
-      /*
-      it('should give correct response', function(done) {
+
+      it('should be properly formatted', function(done) {
         sinon.stub(window.crypto, 'getRandomValues', stubRandom(0));
         bob.network.on('authChallenge', function() {
           window.crypto.getRandomValues.restore();
           sinon.stub(window.crypto, 'getRandomValues', stubRandom(1));
           bob.connectionHandler.onAuthChallenge.apply(bob.connectionHandler, arguments);
         });
-        alice.network.on('authResponseError', function(error) {
-          console.log('authResponseError', error);
+        bob.network.on('authLastResponseError', function(error) {
+          console.log('authLastResponseError', error);
         });
-        alice.network.on('authResponse', function(peerName, data) {
-          if(peerName !== 'bob') {
+        bob.network.on('authLastResponse', function(peerName, data) {
+          if(peerName !== 'alice') {
             done(new Error('incorrect peer name '+peerName));
           }
-          return crypto.decryptData(alice.privKey, new Uint8Array(data.data)).then(function(result) {
+          return crypto.decryptData(bob.privKey, new Uint8Array(data.data)).then(function(result) {
             var resultView = new Uint8Array(result);
-            if(resultView.length !== firstResponse.length) {
-              done(new Error('incorrect first response length'));
+            if(resultView.length !== lastResponse.length) {
+              done(new Error('incorrect last response length'));
             }
-            for(var i=0; i<firstResponse.length; i++) {
-              if (resultView[i] !== firstResponse[i]) {
-                done(new Error('incorrect first response data'));
+            for(var i=0; i<lastResponse.length; i++) {
+              if (resultView[i] !== lastResponse[i]) {
+                done(new Error('incorrect last response data'));
               }
             }
             done();
@@ -220,7 +221,6 @@ describe("ConnectionHandler", function() {
         alice.connectionHandler.connect('bob').then(function() {
         });
       });
-      */
     });
   });
 });
