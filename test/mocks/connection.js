@@ -5,10 +5,10 @@
 
   var logger = new Logger('Connection');
 
-  function Connection(peer) {
-    this.identity = peer.identity;
-    this.peer = peer;
-    peer.on('data', ondata.bind(this));
+  function Connection(otherPeer, thisPeer) {
+    this.identity = otherPeer.identity;
+    this.peer = otherPeer;
+    thisPeer.on('data', ondata.bind(this));
   }
 
   var send = function(data) {
@@ -16,7 +16,7 @@
   };
 
   var ondata = function(data) {
-    console.log('Incoming data', data);
+    console.log('Incoming data', data, this);
     if ( !data.type ) return;
     var from = this.identity;
     this.trigger(data.type, from, data, this);
