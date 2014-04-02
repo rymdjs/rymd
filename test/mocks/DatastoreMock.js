@@ -8,4 +8,15 @@ Store.prototype.use = function() {
 
 Store.prototype.save = function() {};
 
-Store.prototype.get = function() {};
+Store.prototype.get = function() {
+  var deferred = Q.defer();
+
+
+  deferred.resolve();
+
+  return deferred.promise;
+};
+
+Store.prototype.exists = function() {
+  return true;
+};
