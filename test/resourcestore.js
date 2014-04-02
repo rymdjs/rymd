@@ -1,7 +1,21 @@
 var should = chai.should();
 
-describe('ResourceStore', function() {
+function readAsText(blob) {
+  var deferred = Q.defer();
 
+  var reader = new FileReader();
+
+  reader.onload = function(ev) {
+    deferred.resolve(ev.target.result);
+  };
+
+  reader.readAsText(blob);
+
+  return deferred.promise;
+}
+
+
+describe('ResourceStore', function() {
 
   it('should create a resource', function(done) {
     var store = new Store();
