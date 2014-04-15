@@ -62,6 +62,105 @@ describe('ResourceStore', function() {
       });
   });
 
+  it('should be able to get a saved resource', function(done) {
+    var store = new Store();
+    var saveCallback = sinon.spy(store, 'save');
+
+    var resourceStore = new ResourceStore(store, RymdCrypto, { keyStore: 'keystore', dataStore: 'datastore' });
+
+    resourceStore.createResource('john.jpeg', new Blob([]), 'john', 'image/jpeg').then(resourceStore.saveResource.bind(resourceStore))
+      .then(function() {
+        // store away the resource in our store
+        var resourceKey = saveCallback.getCall(0).args;
+        var masterKey = saveCallback.getCall(1).args;
+        var metadata = saveCallback.getCall(2).args;
+        var resourceData = saveCallback.getCall(3).args;
+
+        /*
+          Stub for #get on IndexedDBStore which gets called by ResourceStore, in call to #createResource
+          masterKey, encrypted metadata and stuff like that was "saved" to the database, which we
+          now resolves when asked for again
+         */
+        var stub = sinon.stub(store, 'get', function(guid) {
+          var deferred = Q.defer();
+
+          if (guid === 'masterkey') {
+            deferred.resolve({ data: masterKey[1]});
+          } else if (guid === resourceData[0] + '-meta') {
+            deferred.resolve({ data: metadata[1] });
+          } else if (guid === resourceData[0] + '-k1') {
+            deferred.resolve({ data: resourceKey[1] });
+          } else if (guid === resourceData[0]) {
+            deferred.resolve({ data: new Uint8Array(resourceData[1]) });
+          }
+
+          return deferred.promise;
+        });
+
+        resourceStore.getResource(resourceData[0]).then(function(resource) {
+          var metadata = resource.metadata;
+
+          metadata.author.should.be.equal('john');
+          metadata.name.should.equal('john.jpeg');
+          metadata.type.should.equal('image/jpeg');
+
+          should.not.exist(resource.data);
+
+          done();
+        });
+      });
+  });
+
+  it('should be able to get a saved resource and load its data', function(done) {
+    var store = new Store();
+    var saveCallback = sinon.spy(store, 'save');
+
+    var resourceStore = new ResourceStore(store, RymdCrypto, { keyStore: 'keystore', dataStore: 'datastore' });
+
+    resourceStore.createResource('john.jpeg', new Blob([]), 'john', 'image/jpeg').then(resourceStore.saveResource.bind(resourceStore))
+      .then(function() {
+        // store away the resource in our store
+        var resourceKey = saveCallback.getCall(0).args;
+        var masterKey = saveCallback.getCall(1).args;
+        var metadata = saveCallback.getCall(2).args;
+        var resourceData = saveCallback.getCall(3).args;
+
+        /*
+          Stub for #get on IndexedDBStore which gets called by ResourceStore, in call to #createResource
+          masterKey, encrypted metadata and stuff like that was "saved" to the database, which we
+          now resolves when asked for again
+         */
+        var stub = sinon.stub(store, 'get', function(guid) {
+          var deferred = Q.defer();
+
+          if (guid === 'masterkey') {
+            deferred.resolve({ data: masterKey[1]});
+          } else if (guid === resourceData[0] + '-meta') {
+            deferred.resolve({ data: metadata[1] });
+          } else if (guid === resourceData[0] + '-k1') {
+            deferred.resolve({ data: resourceKey[1] });
+          } else if (guid === resourceData[0]) {
+            deferred.resolve({ data: new Uint8Array(resourceData[1]) });
+          }
+
+          return deferred.promise;
+        });
+
+        resourceStore.getResource(resourceData[0], resourceStore.loadResourceData).then(function(resource) {
+          var metadata = resource.metadata;
+
+          metadata.author.should.be.equal('john');
+          metadata.name.should.equal('john.jpeg');
+          metadata.type.should.equal('image/jpeg');
+
+          resource.hasData.should.be.true;
+          resource.data.should.be.a('object');
+
+          done();
+        });
+      });
+  });
+
     it('should be able to save a resource and decrypt it', function(done) {
     var store = new Store();
     var saveCallback = sinon.spy(store, 'save');
