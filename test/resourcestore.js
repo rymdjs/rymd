@@ -14,6 +14,10 @@ function readAsText(blob) {
   return deferred.promise;
 }
 
+function base64ToUint8Array(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/').replace(/\s/g, '');
+  return new Uint8Array(Array.prototype.map.call(atob(s), function (c) { return c.charCodeAt(0) }));
+}
 
 describe('ResourceStore', function() {
 
@@ -62,7 +66,7 @@ describe('ResourceStore', function() {
       });
   });
 
-    it('should be able to save a resource and decrypt it', function(done) {
+  it('should be able to save a resource and decrypt it', function(done) {
     var store = new Store();
     var saveCallback = sinon.spy(store, 'save');
 
@@ -121,6 +125,30 @@ describe('ResourceStore', function() {
 
         });
       });
+  });
+
+  it('should be able to set the private key', function(done) {
+    var store = new Store();
+    var saveCallback = sinon.spy(store, 'save');
+
+    var resourceStore = new ResourceStore(store, RymdCrypto, { keyStore: 'keystore', dataStore: 'datastore' });
+
+    // call set for a identity with the key
+    var privateKey = "MIICeQIBADANBgkqhkiG9w0BAQEFAASCAmMwggJfAgEAAoGBANub8542CcDEFfwSlwLm7e7t1BOHiqJN7KQUvezgm0XhTOP13Co66OxDkrlrlUYX+O0HVFJRF36xIkOlqxN+APeREXGF4kmPxKwicthA9f696FCjNfpMVfafzjh92mN19p9gjfSPQJ345eZLouT7ahWx8eXWPtDnX1GVKCvMNn2DAgMBAAECgYEAxkRmDdB7va1Kq+mcrOIQrkXJ0lfssdvoabrQPawKg2yFHso5m2bUI3peXUjj3ASImHaliivsKlWBudE4QsDf3PasY3ePp1lpcs8CQMwRKjPMRQ0bKzmGVNrqUMtb37Fmdg7tdniwZtZC/OhZM3WpMGJoYGqPmBse+3mzL6evgQECQQDz9+fHuS7jEElcA9BLPjPlXDHY+kfzkoo6zlHGN3WqNHuX/Edh+gMbYUBhMd7iVcxAWvRaVAK23u+CzoOkb/6fAkEA5nCDFHj/FU12VGVFXwDMn9Kft/TXgEj38zHVCjz6wMs+0+gvti0hsJ3m8JOETZFIs4ZREsMOzP4AN4fcGPbqnQJBAH+iHEIioWLtLFPVMu2KV0AQ4YswNOA6s9JcCe/3J7mpx1cWBoo9b86tLC8tFfu3AypP6zIubVUagJcgT0KBzOUCQQBGUs+tz78IoTsbRkyFUZkgrQZQ/UdGvv3sGakKFtHvRBdIU/M7hUpiu81eXaZihZPKNZNIRn6d0GYAjFV+yNsJAkEAMNARsogydiYfMwZeSfQXFCXTgM9TdbHBucm6yDKmcMiftnpu7LaIfCCsFyqpfAs+5Ww2EztCjvbMb8Xpn2Hmdg==";
+
+    resourceStore.setPrivateKey(privateKey, 'joe').then(function() {
+      console.dir(saveCallback);
+
+      saveCallback.callCount.should.be.equal(1);
+
+      var saveData = saveCallback.firstCall.args;
+
+      saveData[0].should.be.equal('joe-rsa-priv');
+      // TODO make sure that its the same as the privateKey we passed
+      saveData[1].should.be.a('object');
+
+      done();
+    });
   });
 
 });
