@@ -226,28 +226,77 @@ describe('ResourceStore', function() {
       });
   });
 
-  it('should be able to set the private key', function(done) {
+  it('should be able to destroy a resource', function() {
+    var store = new Store();
+    var destroyCallback = sinon.spy(store, 'destroy');
+
+    var resourceStore = new ResourceStore(store, RymdCrypto, { keyStore: 'keystore', dataStore: 'datastore' });
+
+    var resource = {
+      id: 'test',
+      metadata: {
+        version: 1
+      }
+    };
+
+    resourceStore.destroyResource(resource);
+
+    var resourceIdCall = destroyCallback.getCall(0).args[0];
+    resourceIdCall.should.equal('test');
+
+    var metadataIdCall = destroyCallback.getCall(1).args[0];
+    metadataIdCall.should.equal('test-meta');
+
+    var keyIdCall = destroyCallback.getCall(2).args[0];
+    keyIdCall.should.equal('test-k1');
+  });
+
+  describe('private key', function() {
     var store = new Store();
     var saveCallback = sinon.spy(store, 'save');
 
     var resourceStore = new ResourceStore(store, RymdCrypto, { keyStore: 'keystore', dataStore: 'datastore' });
 
-    // call set for a identity with the key
-    var privateKey = "MIICeQIBADANBgkqhkiG9w0BAQEFAASCAmMwggJfAgEAAoGBANub8542CcDEFfwSlwLm7e7t1BOHiqJN7KQUvezgm0XhTOP13Co66OxDkrlrlUYX+O0HVFJRF36xIkOlqxN+APeREXGF4kmPxKwicthA9f696FCjNfpMVfafzjh92mN19p9gjfSPQJ345eZLouT7ahWx8eXWPtDnX1GVKCvMNn2DAgMBAAECgYEAxkRmDdB7va1Kq+mcrOIQrkXJ0lfssdvoabrQPawKg2yFHso5m2bUI3peXUjj3ASImHaliivsKlWBudE4QsDf3PasY3ePp1lpcs8CQMwRKjPMRQ0bKzmGVNrqUMtb37Fmdg7tdniwZtZC/OhZM3WpMGJoYGqPmBse+3mzL6evgQECQQDz9+fHuS7jEElcA9BLPjPlXDHY+kfzkoo6zlHGN3WqNHuX/Edh+gMbYUBhMd7iVcxAWvRaVAK23u+CzoOkb/6fAkEA5nCDFHj/FU12VGVFXwDMn9Kft/TXgEj38zHVCjz6wMs+0+gvti0hsJ3m8JOETZFIs4ZREsMOzP4AN4fcGPbqnQJBAH+iHEIioWLtLFPVMu2KV0AQ4YswNOA6s9JcCe/3J7mpx1cWBoo9b86tLC8tFfu3AypP6zIubVUagJcgT0KBzOUCQQBGUs+tz78IoTsbRkyFUZkgrQZQ/UdGvv3sGakKFtHvRBdIU/M7hUpiu81eXaZihZPKNZNIRn6d0GYAjFV+yNsJAkEAMNARsogydiYfMwZeSfQXFCXTgM9TdbHBucm6yDKmcMiftnpu7LaIfCCsFyqpfAs+5Ww2EztCjvbMb8Xpn2Hmdg==";
+    var savedPrivateKey;
 
-    resourceStore.setPrivateKey(privateKey, 'joe').then(function() {
-      console.dir(saveCallback);
+    it('should be able to set the private key', function(done) {
+      // call set for a identity with the key
+      var privateKey = "MIICeQIBADANBgkqhkiG9w0BAQEFAASCAmMwggJfAgEAAoGBANub8542CcDEFfwSlwLm7e7t1BOHiqJN7KQUvezgm0XhTOP13Co66OxDkrlrlUYX+O0HVFJRF36xIkOlqxN+APeREXGF4kmPxKwicthA9f696FCjNfpMVfafzjh92mN19p9gjfSPQJ345eZLouT7ahWx8eXWPtDnX1GVKCvMNn2DAgMBAAECgYEAxkRmDdB7va1Kq+mcrOIQrkXJ0lfssdvoabrQPawKg2yFHso5m2bUI3peXUjj3ASImHaliivsKlWBudE4QsDf3PasY3ePp1lpcs8CQMwRKjPMRQ0bKzmGVNrqUMtb37Fmdg7tdniwZtZC/OhZM3WpMGJoYGqPmBse+3mzL6evgQECQQDz9+fHuS7jEElcA9BLPjPlXDHY+kfzkoo6zlHGN3WqNHuX/Edh+gMbYUBhMd7iVcxAWvRaVAK23u+CzoOkb/6fAkEA5nCDFHj/FU12VGVFXwDMn9Kft/TXgEj38zHVCjz6wMs+0+gvti0hsJ3m8JOETZFIs4ZREsMOzP4AN4fcGPbqnQJBAH+iHEIioWLtLFPVMu2KV0AQ4YswNOA6s9JcCe/3J7mpx1cWBoo9b86tLC8tFfu3AypP6zIubVUagJcgT0KBzOUCQQBGUs+tz78IoTsbRkyFUZkgrQZQ/UdGvv3sGakKFtHvRBdIU/M7hUpiu81eXaZihZPKNZNIRn6d0GYAjFV+yNsJAkEAMNARsogydiYfMwZeSfQXFCXTgM9TdbHBucm6yDKmcMiftnpu7LaIfCCsFyqpfAs+5Ww2EztCjvbMb8Xpn2Hmdg==";
 
-      saveCallback.callCount.should.be.equal(1);
+      resourceStore.setPrivateKey(privateKey, 'joe').then(function() {
+        saveCallback.callCount.should.be.equal(1);
 
-      var saveData = saveCallback.firstCall.args;
+        var saveData = saveCallback.firstCall.args;
 
-      saveData[0].should.be.equal('joe-rsa-priv');
-      // TODO make sure that its the same as the privateKey we passed
-      saveData[1].should.be.a('object');
+        saveData[0].should.be.equal('joe-rsa-priv');
+        // TODO make sure that its the same as the privateKey we passed
+        savedPrivateKey = saveData[1];
+        savedPrivateKey.should.be.a('object');
 
-      done();
+        done();
+      });
     });
+
+    it('should be able to get the private key', function(done) {
+
+      var stub = sinon.stub(store, 'get', function(guid) {
+        var deferred = Q.defer();
+
+        if (guid === 'joe-rsa-priv') {
+          deferred.resolve({ data: savedPrivateKey});
+        }
+
+        return deferred.promise;
+      });
+
+      resourceStore.getPrivateKey('joe', 'encrypt').then(function(key) {
+        should.exist(key);
+        key.type.should.be.equal('private');
+
+        done();
+      });
+
+    })
   });
 
 });
